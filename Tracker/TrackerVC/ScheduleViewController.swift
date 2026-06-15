@@ -82,7 +82,7 @@ extension ScheduleViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleCell.identifier, for: indexPath) as! ScheduleCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleCell.identifier, for: indexPath) as? ScheduleCell else { return UITableViewCell() }
         cell.configure(with: WeekDay.orderedCases[indexPath.row])
         cell.delegate = self
         return cell

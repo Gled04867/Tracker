@@ -11,15 +11,28 @@ enum WeekDay: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .monday: return "Понедельник"
-        case .tuesday: return "Вторник"
-        case .wednesday: return "Среда"
-        case .thursday: return "Четверг"
-        case .friday: return "Пятница"
-        case .saturday: return "Суббота"
-        case .sunday: return "Воскресенье"
+        case .monday: "Понедельник"
+        case .tuesday: "Вторник"
+        case .wednesday: "Среда"
+        case .thursday: "Четверг"
+        case .friday: "Пятница"
+        case .saturday: "Суббота"
+        case .sunday: "Воскресенье"
         }
     }
     
     static let orderedCases: [WeekDay] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
+    
+    var shortTitle: String {
+        switch self {
+        case .monday: "Пн"
+        case .tuesday: "Вт"
+        case .wednesday: "Ср"
+        case .thursday: "Чт"
+        case .friday: "Пт"
+        case .saturday: "Сб"
+        case .sunday: "Вс"
+        }
+    }
 }
+

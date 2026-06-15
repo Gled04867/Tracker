@@ -24,8 +24,9 @@ final class TrackerCell: UICollectionViewCell {
         setupButton()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     @objc private func didTapDoneButton() {
@@ -35,7 +36,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private func setupButton() {
         doneButton.layer.cornerRadius = 17
-        doneButton.setImage(UIImage(systemName: "plus"), for: .normal)
+        doneButton.setImage(UIImage(systemName: SystemImages.plus), for: .normal)
         doneButton.tintColor = .white
         doneButton.addTarget(self, action: #selector(didTapDoneButton), for: .touchUpInside)
     }
@@ -46,7 +47,7 @@ final class TrackerCell: UICollectionViewCell {
         colorView.layer.cornerRadius = 16
         colorView.layer.masksToBounds = true
         contentView.layer.masksToBounds = true
-        
+                
         contentView.addSubview(colorView)
         contentView.addSubview(daysLabel)
         contentView.addSubview(doneButton)
@@ -90,10 +91,13 @@ final class TrackerCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         colorView.backgroundColor = tracker.color
         doneButton.backgroundColor = tracker.color
+        nameLabel.font = .systemFont(ofSize: 12, weight: .medium)
         nameLabel.textColor = .white
         updateDoneButton(isCompleted: isCompleted, date: date)
         self.tracker = tracker
-        daysLabel.text = "\(daysCount) дней"
+        daysLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        daysLabel.textColor = .ypBlack
+        daysLabel.text = daysString(daysCount)
         
     }
     
@@ -101,7 +105,21 @@ final class TrackerCell: UICollectionViewCell {
         let today = Calendar.current.startOfDay(for: Date())
         let selected = Calendar.current.startOfDay(for: date)
         doneButton.isEnabled = selected <= today
-        let image = isCompleted ? UIImage(systemName: "checkmark") : UIImage(systemName: "plus")
+        let image = isCompleted ? UIImage(systemName: SystemImages.checkmark) : UIImage(systemName: SystemImages.plus)
         doneButton.setImage(image, for: .normal)
+    }
+    
+    private func daysString(_ count: Int) -> String {
+        let remainder10 = count % 10
+        let remainder100 = count % 100
+        
+        if remainder100 >= 11 && remainder100 <= 14 {
+            return "\(count) дней"
+        }
+        switch remainder10 {
+        case 1: return "\(count) день"
+        case 2, 3, 4: return "\(count) дня"
+        default: return "\(count) дней"
+        }
     }
 }

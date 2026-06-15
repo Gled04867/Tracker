@@ -62,6 +62,8 @@ final class NewTrackerViewController: UIViewController {
     private let types = ["Категория", "Расписание"]
     private var selectedDays: Set<WeekDay> = []
     weak var delegate: NewTrackerViewControllerDelegateProtocol?
+    private let maximumSymbols = 38
+    private var scheduleSubtitle: String?
     
     
     override func viewDidLoad() {
@@ -93,7 +95,6 @@ final class NewTrackerViewController: UIViewController {
             
             createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             createButton.bottomAnchor.constraint(equalTo: cancelButton.bottomAnchor),
-//            createButton.leadingAnchor.constraint(equalTo: cancelButton.trailingAnchor, constant: 8),
             createButton.heightAnchor.constraint(equalToConstant: 60),
             createButton.widthAnchor.constraint(equalTo: cancelButton.widthAnchor)
         ])
@@ -108,8 +109,17 @@ final class NewTrackerViewController: UIViewController {
         tableView.register(NewTrackerCell.self, forCellReuseIdentifier: NewTrackerCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
+        textField.delegate = self
         cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         createButton.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
+        createButton.isEnabled = false
+    }
+    
+    private func changeCreateButton() {
+        let name = !(textField.text?.isEmpty ?? true)
+        let days = !selectedDays.isEmpty
+        createButton.isEnabled = name && days
+        createButton.backgroundColor = name && days ? .ypBlack : .ypGray
     }
     
     @objc private func cancelButtonTapped() {
@@ -131,9 +141,13 @@ extension NewTrackerViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: NewTrackerCell.identifier, for: indexPath) as! NewTrackerCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: NewTrackerCell.identifier, for: indexPath) as? NewTrackerCell else { return UITableViewCell() }
         
-        cell.titleLabel.text = types[indexPath.row]
+        if indexPath.row == 1 {
+            cell.configure(title: types[indexPath.row], subtitle: scheduleSubtitle)
+        } else {
+            cell.configure(title: types[indexPath.row], subtitle: nil)
+        }
         return cell
     }
     
@@ -157,6 +171,13 @@ extension NewTrackerViewController: UITableViewDelegate {
 extension NewTrackerViewController: ScheduleViewControllerDelegateProtocol {
     func didSelectDays(_ days: Set<WeekDay>) {
         selectedDays = days
+        let daysString = WeekDay.orderedCases
+            .filter { days.contains($0) }
+            .map { $0.shortTitle }
+            .joined(separator: ", ")
+        self.scheduleSubtitle = daysString
+        tableView.reloadData()
+        changeCreateButton()
     }
 }
 
@@ -165,6 +186,10 @@ extension NewTrackerViewController: UITextFieldDelegate {
         let currentText = textField.text ?? ""
         guard let range = Range(range, in: currentText) else { return false }
         let newText = currentText.replacingCharacters(in: range, with: string)
-        return newText.count <= 38
+        return newText.count <= maximumSymbols
+    }
+    
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        changeCreateButton()
     }
 }
