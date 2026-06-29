@@ -12,6 +12,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow()
         window?.rootViewController = TabBarController()
         window?.makeKeyAndVisible()
+        DaysValueTransformer.register()
         return true
     }
 

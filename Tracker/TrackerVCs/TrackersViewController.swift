@@ -2,10 +2,10 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    var mockCategories: [TrackerCategory] = []
-    
-    private var completedTrackers: [TrackerRecord] = []
     private var visibleCategories: [TrackerCategory] = []
+    private let trackerCategoryStore = TrackerCategoryStore(context: CoreDataStack.shared.context)
+    private let trackerStore = TrackerStore(context: CoreDataStack.shared.context)
+    private let trackerRecordStore = TrackerRecordStore(context: CoreDataStack.shared.context)
     
     
     private let cellSpacing: CGFloat = 9
@@ -61,6 +61,7 @@ final class TrackersViewController: UIViewController {
         collectionView.dataSource = self
         filterTrackers(for: datePicker.date)
         updatePlaceholder()
+        trackerCategoryStore.delegate = self
     }
     
     private func setupNavigationBar() {
@@ -101,7 +102,7 @@ final class TrackersViewController: UIViewController {
     }
     
     private func completedDays(for tracker: Tracker) -> Int {
-        completedTrackers.filter {$0.id == tracker.id}.count
+        trackerRecordStore.completedDays(for: tracker.id)
     }
     
     @objc func pickDate(_ sender: UIDatePicker) {
@@ -119,7 +120,7 @@ final class TrackersViewController: UIViewController {
     private func filterTrackers(for date: Date) {
         let weekday = Calendar.current.component(.weekday, from: date)
         guard let currentWeekDay = WeekDay(rawValue: weekday) else { return }
-        visibleCategories = mockCategories.compactMap { category in
+        visibleCategories = trackerCategoryStore.categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { $0.schedule.contains(currentWeekDay) }
             return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
@@ -141,7 +142,7 @@ extension TrackersViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.identifier, for: indexPath) as? TrackerCell else { return UICollectionViewCell()}
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        let isCompleted = completedTrackers.contains(where: {$0.id == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: datePicker.date)})
+        let isCompleted = trackerRecordStore.isTrackerCompleted(tracker.id, on: datePicker.date)
         let date = datePicker.date
         cell.configureCell(tracker: tracker, isCompleted: isCompleted, date: date, daysCount: completedDays(for: tracker))
         cell.delegate = self
@@ -182,10 +183,15 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
 extension TrackersViewController: TrackerCellDelegateProtocol {
     func didTapDoneButton(for tracker: Tracker) {
         let currentDate = datePicker.date
-        if let index = completedTrackers.firstIndex(where: {$0.id == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate)}) {
-            completedTrackers.remove(at: index)
-        } else {
-            completedTrackers.append(TrackerRecord(id: tracker.id, date: currentDate))
+        let record = TrackerRecord(id: tracker.id, date: currentDate)
+        do {
+            if trackerRecordStore.isTrackerCompleted(tracker.id, on: currentDate) {
+                try trackerRecordStore.deleteRecord(record)
+            } else {
+                try trackerRecordStore.addRecord(record)
+            }
+        } catch {
+            print("Error saving record: \(error)")
         }
         collectionView.reloadData()
     }
@@ -193,12 +199,12 @@ extension TrackersViewController: TrackerCellDelegateProtocol {
 
 extension TrackersViewController: NewTrackerViewControllerDelegateProtocol {
     func didCreateTracker(_ tracker: Tracker, category: TrackerCategory) {
-        if let index = mockCategories.firstIndex(where: { $0.title == category.title }) {
-            let updatedTrackers = mockCategories[index].trackers + [tracker]
-            mockCategories[index] = TrackerCategory(title: category.title, trackers: updatedTrackers)
-        } else {
-            mockCategories.append(category)
-        }
+        try? trackerStore.addTracker(tracker, to: category)
+    }
+}
+
+extension TrackersViewController: TrackerCategoryStoreDelegateProtocol {
+    func didUpdateTrackerCategoryStore(_ update: TrackerCategoryStoreUpdate) {
         filterTrackers(for: datePicker.date)
         updatePlaceholder()
         collectionView.reloadData()

@@ -193,7 +193,7 @@ final class NewTrackerViewController: UIViewController {
         let emoji = selectedEmojiIndex != nil
         let color = selectedColorIndex != nil
         createButton.isEnabled = name && days && emoji && color
-        createButton.backgroundColor = name && days ? .ypBlack : .ypGray
+        createButton.backgroundColor = name && days && emoji && color ? .ypBlack : .ypGray
     }
     
     @objc private func cancelButtonTapped() {
@@ -248,11 +248,15 @@ extension NewTrackerViewController: UITableViewDelegate {
 extension NewTrackerViewController: ScheduleViewControllerDelegateProtocol {
     func didSelectDays(_ days: Set<WeekDay>) {
         selectedDays = days
-        let daysString = WeekDay.orderedCases
-            .filter { days.contains($0) }
-            .map { $0.shortTitle }
-            .joined(separator: ", ")
-        self.scheduleSubtitle = daysString
+        if selectedDays.count == 7 {
+            scheduleSubtitle = "Каждый день"
+        } else {
+            let daysString = WeekDay.orderedCases
+                .filter { days.contains($0) }
+                .map { $0.shortTitle }
+                .joined(separator: ", ")
+            self.scheduleSubtitle = daysString
+        }
         tableView.reloadData()
         changeCreateButton()
     }
