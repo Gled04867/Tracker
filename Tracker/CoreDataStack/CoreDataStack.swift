@@ -1,7 +1,10 @@
 import CoreData
+import Logging
 
 final class CoreDataStack {
     static let shared = CoreDataStack()
+    
+    private let logger = Logger(label: "com.Tracker.CoreDataStack")
     
     private init(){}
     
@@ -9,14 +12,15 @@ final class CoreDataStack {
         let container = NSPersistentContainer(name: "Tracker")
         container.loadPersistentStores(completionHandler: {(storeDescription, error) in
             if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                self.logger.critical("Unresolved error \(error.localizedDescription), userInfo: \(error.userInfo)")
+                assertionFailure("\(error.localizedDescription), userInfo: \(error.userInfo)")
             }
         })
         return container
     }()
     
     var context: NSManagedObjectContext {
-        return persistentContainer.viewContext
+        persistentContainer.viewContext
     }
 
     func saveContext() {
@@ -27,7 +31,7 @@ final class CoreDataStack {
             } catch {
                 context.rollback()
                 let error = error as NSError
-                print("Core Data save error: \(error), \(error.userInfo)")
+                logger.error("Core Data save error: \(error), \(error.userInfo)")
             }
         }
     }
