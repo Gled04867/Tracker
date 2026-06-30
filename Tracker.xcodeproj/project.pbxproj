@@ -208,6 +208,9 @@
 			);
 			mainGroup = 3397BD3B2FCC25BB00B0B01E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				33F744FF2FE70BB100504C77 /* XCRemoteSwiftPackageReference "swift-log" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3397BD452FCC25BB00B0B01E /* Products */;
 			projectDirPath = "";
@@ -599,6 +602,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		33F744FF2FE70BB100504C77 /* XCRemoteSwiftPackageReference "swift-log" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-log";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.13.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 3397BD3C2FCC25BB00B0B01E /* Project object */;
 }
